@@ -1,0 +1,853 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI News Intelligence Agent</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;1,300&family=Newsreader:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a26;
+    --border: #2a2a3d;
+    --accent: #7c6aff;
+    --accent2: #ff6a9b;
+    --accent3: #6affda;
+    --text: #e8e8f0;
+    --muted: #6b6b8a;
+    --glow: rgba(124, 106, 255, 0.15);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(124,106,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,106,255,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Orbs */
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    z-index: 0;
+    animation: float 8s ease-in-out infinite;
+  }
+  .orb1 { width: 400px; height: 400px; background: rgba(124,106,255,0.12); top: -100px; left: -100px; animation-delay: 0s; }
+  .orb2 { width: 300px; height: 300px; background: rgba(255,106,155,0.08); bottom: -50px; right: -50px; animation-delay: 3s; }
+  .orb3 { width: 200px; height: 200px; background: rgba(106,255,218,0.06); top: 40%; right: 10%; animation-delay: 5s; }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px) scale(1); }
+    50% { transform: translateY(-20px) scale(1.05); }
+  }
+
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  /* Header */
+  header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 20px;
+  }
+
+  .badge-dot {
+    width: 6px; height: 6px;
+    background: var(--accent3);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #fff 0%, var(--accent) 60%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 12px;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 13px;
+    letter-spacing: 0.04em;
+  }
+
+  /* Config Panel */
+  .config-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .config-panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  }
+
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  label {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  input, select, textarea {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    padding: 12px 16px;
+    outline: none;
+    transition: all 0.2s;
+    width: 100%;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    background: rgba(124,106,255,0.05);
+    box-shadow: 0 0 0 3px rgba(124,106,255,0.1);
+  }
+
+  input[type="password"] { letter-spacing: 0.08em; }
+
+  .query-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .query-row input {
+    flex: 1;
+    font-size: 14px;
+    padding: 14px 18px;
+  }
+
+  /* Run Button */
+  .run-btn {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    cursor: pointer;
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 14px 28px;
+    text-transform: uppercase;
+    transition: all 0.25s;
+    white-space: nowrap;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .run-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 30px rgba(124,106,255,0.35);
+  }
+
+  .run-btn:active { transform: translateY(0); }
+
+  .run-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  /* Quick topics */
+  .quick-topics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .chip {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 5px 12px;
+    transition: all 0.2s;
+  }
+
+  .chip:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(124,106,255,0.05);
+  }
+
+  /* Status / Terminal */
+  .status-terminal {
+    background: #080810;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    display: none;
+    min-height: 80px;
+    font-size: 12px;
+    line-height: 1.8;
+  }
+
+  .status-terminal.active { display: block; }
+
+  .log-line {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    animation: fadein 0.3s ease;
+  }
+
+  @keyframes fadein { from { opacity: 0; transform: translateX(-4px); } to { opacity: 1; } }
+
+  .log-time { color: var(--muted); flex-shrink: 0; }
+  .log-ok { color: var(--accent3); }
+  .log-info { color: var(--accent); }
+  .log-warn { color: #ffb86c; }
+  .log-err { color: var(--accent2); }
+
+  /* Report */
+  .report-area {
+    display: none;
+  }
+  .report-area.active { display: block; }
+
+  .report-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .report-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .meta-pills {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .meta-pill {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    padding: 4px 10px;
+    color: var(--muted);
+  }
+
+  .report-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .report-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3));
+  }
+
+  .report-content {
+    font-family: 'Newsreader', Georgia, serif;
+    font-size: 16px;
+    line-height: 1.8;
+    color: #d0d0e0;
+  }
+
+  .report-content h1, .report-content h2, .report-content h3 {
+    font-family: 'Syne', sans-serif;
+    color: var(--text);
+    margin: 24px 0 12px;
+    font-weight: 700;
+  }
+  .report-content h1 { font-size: 22px; }
+  .report-content h2 { font-size: 18px; color: var(--accent); }
+  .report-content h3 { font-size: 15px; color: var(--accent3); }
+
+  .report-content p { margin-bottom: 16px; }
+
+  .report-content strong { color: var(--text); font-weight: 600; }
+
+  .report-content ul, .report-content ol {
+    padding-left: 24px;
+    margin-bottom: 16px;
+  }
+  .report-content li { margin-bottom: 6px; }
+
+  .report-content a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(124,106,255,0.3);
+  }
+  .report-content a:hover { border-color: var(--accent); }
+
+  .report-content blockquote {
+    border-left: 3px solid var(--accent);
+    padding: 8px 20px;
+    margin: 16px 0;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  .report-content hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 24px 0;
+  }
+
+  /* Sources */
+  .sources-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .source-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    transition: all 0.2s;
+    cursor: pointer;
+    text-decoration: none;
+    display: block;
+  }
+
+  .source-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(124,106,255,0.12);
+  }
+
+  .source-num {
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    margin-bottom: 6px;
+  }
+
+  .source-title {
+    font-size: 12px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.4;
+    margin-bottom: 4px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .source-url {
+    font-size: 10px;
+    color: var(--muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Action bar */
+  .action-bar {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+
+  .action-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    padding: 8px 16px;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+
+  .action-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(124,106,255,0.05);
+  }
+
+  /* Spinner */
+  .spinner {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border: 2px solid rgba(124,106,255,0.3);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--surface2);
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 12px;
+    padding: 12px 20px;
+    z-index: 100;
+    transform: translateY(20px);
+    opacity: 0;
+    transition: all 0.3s;
+    pointer-events: none;
+  }
+  .toast.show { transform: none; opacity: 1; }
+
+  /* Error */
+  .error-box {
+    background: rgba(255,106,155,0.08);
+    border: 1px solid rgba(255,106,155,0.3);
+    border-radius: 10px;
+    padding: 16px 20px;
+    color: var(--accent2);
+    font-size: 13px;
+    margin-bottom: 16px;
+    display: none;
+  }
+  .error-box.active { display: block; }
+</style>
+</head>
+<body>
+
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+
+<div class="wrapper">
+
+  <!-- Header -->
+  <header>
+    <div class="badge">
+      <span class="badge-dot"></span>
+      AI Intelligence Agent
+    </div>
+    <h1>AI News<br>Report Engine</h1>
+    <p class="subtitle">Powered by Serper Search × Gemini Analysis</p>
+  </header>
+
+  <!-- Config Panel -->
+  <div class="config-panel">
+    <div class="section-label">API Configuration</div>
+    <div class="grid-2">
+      <div class="field">
+        <label>Serper API Key</label>
+        <input type="password" id="serperKey" placeholder="sk-serper-..." autocomplete="off">
+      </div>
+      <div class="field">
+        <label>Gemini API Key</label>
+        <input type="password" id="geminiKey" placeholder="AIza..." autocomplete="off">
+      </div>
+    </div>
+
+    <div class="section-label" style="margin-top: 24px;">Search Query</div>
+
+    <div class="query-row">
+      <input type="text" id="queryInput" placeholder="e.g. latest AI breakthroughs 2026" value="latest artificial intelligence news 2026">
+      <button class="run-btn" id="runBtn" onclick="runAgent()">
+        ▶ Run Agent
+      </button>
+    </div>
+
+    <div class="quick-topics">
+      <span class="chip" onclick="setQuery('GPT-5 and large language models 2026')">GPT-5 & LLMs</span>
+      <span class="chip" onclick="setQuery('AI agents autonomous systems 2026')">AI Agents</span>
+      <span class="chip" onclick="setQuery('AI robotics breakthroughs 2026')">AI Robotics</span>
+      <span class="chip" onclick="setQuery('AI regulation policy news 2026')">AI Policy</span>
+      <span class="chip" onclick="setQuery('generative AI image video tools 2026')">GenAI Tools</span>
+      <span class="chip" onclick="setQuery('AI in healthcare medicine 2026')">AI Healthcare</span>
+      <span class="chip" onclick="setQuery('open source AI models 2026')">Open Source AI</span>
+    </div>
+  </div>
+
+  <!-- Error Box -->
+  <div class="error-box" id="errorBox"></div>
+
+  <!-- Status Terminal -->
+  <div class="status-terminal" id="statusTerminal"></div>
+
+  <!-- Report Area -->
+  <div class="report-area" id="reportArea">
+    <div class="report-header">
+      <div class="report-title">Intelligence Report</div>
+      <div class="meta-pills">
+        <span class="meta-pill" id="metaTime"></span>
+        <span class="meta-pill" id="metaSources"></span>
+        <span class="meta-pill" id="metaQuery"></span>
+      </div>
+    </div>
+
+    <div class="report-card">
+      <div class="report-content" id="reportContent"></div>
+    </div>
+
+    <div class="section-label" style="margin-top: 28px;">Source Articles</div>
+    <div class="sources-grid" id="sourcesGrid"></div>
+
+    <div class="action-bar">
+      <button class="action-btn" onclick="copyReport()">⎘ Copy Report</button>
+      <button class="action-btn" onclick="downloadReport()">↓ Download</button>
+      <button class="action-btn" onclick="runAgent()">↻ Refresh</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  let currentReport = '';
+  let currentSources = [];
+
+  function setQuery(q) {
+    document.getElementById('queryInput').value = q;
+  }
+
+  function getTime() {
+    return new Date().toLocaleTimeString('en', { hour12: false });
+  }
+
+  function log(msg, type = 'info') {
+    const t = document.getElementById('statusTerminal');
+    const line = document.createElement('div');
+    line.className = 'log-line';
+    line.innerHTML = `<span class="log-time">[${getTime()}]</span><span class="log-${type}">${msg}</span>`;
+    t.appendChild(line);
+    t.scrollTop = t.scrollHeight;
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  function setError(msg) {
+    const b = document.getElementById('errorBox');
+    b.textContent = '⚠ ' + msg;
+    b.classList.toggle('active', !!msg);
+  }
+
+  function markdownToHtml(md) {
+    return md
+      .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+      .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+      .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/`(.+?)`/g, '<code>$1</code>')
+      .replace(/^---$/gm, '<hr>')
+      .replace(/^\> (.+)$/gm, '<blockquote>$1</blockquote>')
+      .replace(/^\* (.+)$/gm, '<li>$1</li>')
+      .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
+      .replace(/(<li>.*<\/li>\n?)+/g, s => `<ul>${s}</ul>`)
+      .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank">$1</a>')
+      .replace(/\n\n/g, '</p><p>')
+      .replace(/^(?!<[hbuol])(.+)$/gm, m => m ? m : '')
+      .replace(/^<\/p><p>(<h[123]|<ul|<hr|<blockquote)/, '$1')
+      .replace(/(<\/h[123]>|<\/ul>|<hr>|<\/blockquote>)<\/p><p>/g, '$1')
+      || '<p>' + md + '</p>';
+  }
+
+  async function runAgent() {
+    const serperKey = document.getElementById('serperKey').value.trim();
+    const geminiKey = document.getElementById('geminiKey').value.trim();
+    const query = document.getElementById('queryInput').value.trim();
+
+    setError('');
+
+    if (!serperKey) { setError('Please enter your Serper API key.'); return; }
+    if (!geminiKey) { setError('Please enter your Gemini API key.'); return; }
+    if (!query) { setError('Please enter a search query.'); return; }
+
+    const btn = document.getElementById('runBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Searching...';
+
+    const terminal = document.getElementById('statusTerminal');
+    terminal.innerHTML = '';
+    terminal.classList.add('active');
+    document.getElementById('reportArea').classList.remove('active');
+
+    log('Agent initialized. Starting pipeline...', 'info');
+    log(`Query: "${query}"`, 'info');
+
+    // Step 1: Serper Search
+    log('Calling Serper Search API...', 'info');
+    let articles = [];
+
+    try {
+      const serperRes = await fetch('https://google.serper.dev/search', {
+        method: 'POST',
+        headers: {
+          'X-API-KEY': serperKey,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ q: query, num: 10, gl: 'us', hl: 'en' })
+      });
+
+      if (!serperRes.ok) {
+        const errText = await serperRes.text();
+        throw new Error(`Serper API error ${serperRes.status}: ${errText}`);
+      }
+
+      const serperData = await serperRes.json();
+      const organic = serperData.organic || [];
+      articles = organic.map((r, i) => ({
+        num: i + 1,
+        title: r.title || '',
+        snippet: r.snippet || '',
+        url: r.link || '',
+        source: r.source || new URL(r.link || 'https://unknown').hostname
+      }));
+
+      currentSources = articles;
+      log(`✓ Found ${articles.length} articles from Serper.`, 'ok');
+      articles.slice(0, 4).forEach(a => log(`  [${a.num}] ${a.title.substring(0, 60)}...`, 'info'));
+
+    } catch (e) {
+      log('✗ Serper search failed: ' + e.message, 'err');
+      setError('Serper API Error: ' + e.message);
+      btn.disabled = false;
+      btn.innerHTML = '▶ Run Agent';
+      return;
+    }
+
+    // Step 2: Build context for Gemini
+    log('Preparing context for Gemini analysis...', 'info');
+
+    const context = articles.map(a =>
+      `[${a.num}] **${a.title}**\nSource: ${a.source}\nURL: ${a.url}\nSummary: ${a.snippet}`
+    ).join('\n\n');
+
+    const prompt = `You are an expert AI research journalist. Based on the following ${articles.length} news articles found via web search, write a comprehensive, well-structured intelligence report about: "${query}"
+
+Here are the source articles:
+
+${context}
+
+---
+
+Write a professional intelligence report with:
+1. **Executive Summary** - 2-3 sentence overview of the most important developments
+2. **Key Developments** - The most significant news items, explained clearly (reference articles by [number])
+3. **Emerging Trends** - Patterns and themes you notice across the articles
+4. **Notable Players** - Companies, researchers, or organizations making headlines
+5. **Implications & Analysis** - What these developments mean for the field and society
+6. **What to Watch** - Key things to follow in the coming weeks
+
+Use markdown formatting with ## for section headers. Be analytical, insightful, and specific. Reference article numbers where appropriate. Write at least 600 words. Do NOT make up facts not in the sources.`;
+
+    btn.innerHTML = '<span class="spinner"></span> Analyzing...';
+    log('Sending to Gemini 1.5 Flash for analysis...', 'info');
+
+    // Step 3: Gemini API
+    try {
+      const geminiRes = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              temperature: 0.7,
+              maxOutputTokens: 2048,
+            }
+          })
+        }
+      );
+
+      if (!geminiRes.ok) {
+        const errText = await geminiRes.text();
+        throw new Error(`Gemini API error ${geminiRes.status}: ${errText}`);
+      }
+
+      const geminiData = await geminiRes.json();
+      const reportText = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      if (!reportText) throw new Error('No content returned from Gemini.');
+
+      log('✓ Report generated successfully.', 'ok');
+      log(`Report length: ${reportText.length} characters`, 'info');
+
+      currentReport = reportText;
+
+      // Render report
+      document.getElementById('reportContent').innerHTML = markdownToHtml(reportText);
+
+      // Meta pills
+      document.getElementById('metaTime').textContent = new Date().toLocaleString();
+      document.getElementById('metaSources').textContent = `${articles.length} sources`;
+      document.getElementById('metaQuery').textContent = query.substring(0, 30) + (query.length > 30 ? '...' : '');
+
+      // Sources grid
+      const grid = document.getElementById('sourcesGrid');
+      grid.innerHTML = '';
+      articles.forEach(a => {
+        const card = document.createElement('a');
+        card.href = a.url;
+        card.target = '_blank';
+        card.rel = 'noopener';
+        card.className = 'source-card';
+        card.innerHTML = `
+          <div class="source-num">Source [${a.num}]</div>
+          <div class="source-title">${a.title}</div>
+          <div class="source-url">${a.source}</div>
+        `;
+        grid.appendChild(card);
+      });
+
+      log('✓ Report rendered. Pipeline complete.', 'ok');
+      document.getElementById('reportArea').classList.add('active');
+
+    } catch (e) {
+      log('✗ Gemini analysis failed: ' + e.message, 'err');
+      setError('Gemini API Error: ' + e.message);
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '▶ Run Agent';
+  }
+
+  function copyReport() {
+    if (!currentReport) return;
+    navigator.clipboard.writeText(currentReport).then(() => showToast('Report copied to clipboard'));
+  }
+
+  function downloadReport() {
+    if (!currentReport) return;
+    const blob = new Blob([currentReport], { type: 'text/markdown' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `ai-news-report-${Date.now()}.md`;
+    a.click();
+    showToast('Report downloaded');
+  }
+</script>
+</body>
+</html>
