@@ -359,4 +359,5 @@ if __name__ == "__main__":
     print("  Server running at http://localhost:5000")
     print("  Open index.html in your browser")
     print("="*50 + "\n")
-    app.run(debug=True, port=5000)
+    port = os.environ.get("PORT")
+    app.run(host="0.0.0.0",port=port)
